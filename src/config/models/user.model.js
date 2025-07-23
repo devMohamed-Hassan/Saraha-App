@@ -48,7 +48,12 @@ const schema = new Schema(
       default: Gender.male,
       enum: Object.values(Gender),
     },
+    phone: {
+      type: String,
+      required: true,
+    },
   },
+
   {
     timestamps: true,
   }
