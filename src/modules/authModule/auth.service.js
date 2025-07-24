@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import userModel from "../../config/models/user.model.js";
+import { handleSuccess } from "../../utils/responseHandler.js";
 
 const INVALID_CREDENTIALS_MSG = "Invalid email or password";
 const SALT_ROUNDS = 10;
@@ -44,8 +45,12 @@ export const signUp = async (req, res, next) => {
 
   const userObj = user.toObject();
   delete userObj.password;
-
-  res.status(201).json({ msg: "Signup successful", user: userObj });
+  handleSuccess({
+    res,
+    statusCode: 201,
+    message: "Signup successful",
+    data: userObj,
+  });
 };
 
 export const login = async (req, res, next) => {
@@ -76,6 +81,10 @@ export const login = async (req, res, next) => {
 
   const userObj = user.toObject();
   delete userObj.password;
-
-  res.status(202).json({ msg: "Login successful", user: userObj });
+  handleSuccess({
+    res,
+    statusCode: 202,
+    message: "Login successful",
+    data: userObj,
+  });
 };
