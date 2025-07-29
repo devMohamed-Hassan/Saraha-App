@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import userModel from "../../config/models/user.model.js";
 import { handleSuccess } from "../../utils/responseHandler.js";
+import jwt from "jsonwebtoken";
 
 const INVALID_CREDENTIALS_MSG = "Invalid email or password";
 const SALT_ROUNDS = 10;
@@ -79,12 +80,24 @@ export const login = async (req, res, next) => {
     throw new Error(INVALID_CREDENTIALS_MSG, { cause: 400 });
   }
 
-  const userObj = user.toObject();
-  delete userObj.password;
+  const payload = {
+    _id: user._id,
+    email: user.email,
+  };
+
+  const token = jwt.sign(payload, process.env.Signature);
+
   handleSuccess({
     res,
     statusCode: 202,
     message: "Login successful",
-    data: userObj,
+    data: {
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token,
+      },
+    },
   });
 };
