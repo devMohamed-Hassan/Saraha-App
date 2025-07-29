@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import userModel from "../../config/models/user.model.js";
 import { handleSuccess } from "../../utils/responseHandler.js";
 import jwt from "jsonwebtoken";
+import { create, findOne } from "../../services/db.service.js";
 
 const INVALID_CREDENTIALS_MSG = "Invalid email or password";
 const SALT_ROUNDS = 10;
@@ -27,14 +28,14 @@ export const signUp = async (req, res, next) => {
     throw new Error("Name must be at least 2 characters", { cause: 400 });
   }
 
-  const isExist = await userModel.findOne({ email });
+  const isExist = await findOne(userModel, { email });
   if (isExist) {
     throw new Error("This email is already registered", { cause: 400 });
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-  const user = await userModel.create({
+  const user = await create(userModel, {
     name,
     email,
     password: hashedPassword,
@@ -67,7 +68,7 @@ export const login = async (req, res, next) => {
     throw new Error("Invalid email format", { cause: 400 });
   }
 
-  const user = await userModel.findOne({ email });
+  const user = await findOne(userModel, { email });
 
   if (!user) {
     const fakeHash = "$2b$10$abcdefghijklmnopqrstuvCDEFGHIJKLMNO123456";
@@ -85,7 +86,7 @@ export const login = async (req, res, next) => {
     email: user.email,
   };
 
-  const token = jwt.sign(payload, process.env.Signature);
+  const token = jwt.sign(payload, process.env.JWT_SIGNATURE);
 
   handleSuccess({
     res,
