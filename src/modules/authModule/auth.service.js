@@ -3,6 +3,7 @@ import userModel from "../../config/models/user.model.js";
 import { handleSuccess } from "../../utils/responseHandler.js";
 import jwt from "jsonwebtoken";
 import { create, findById, findOne } from "../../services/db.service.js";
+import { decodeToken, types } from "../../middlewares/auth.middleware.js";
 
 const INVALID_CREDENTIALS_MSG = "Invalid email or password";
 const SALT_ROUNDS = 10;
@@ -110,12 +111,11 @@ export const login = async (req, res, next) => {
 };
 
 export const refreshToken = async (req, res, next) => {
-  const { authorization } = req.headers;
-  const payload = jwt.verify(authorization, process.env.REFRESH_TOKEN_SECRET);
-  const user = await findById(userModel, payload._id);
-  if (!user) {
-    return next(new Error("User Not Found", { cause: 401 }));
+  const { token } = req.headers;
+  if (!token) {
+    throw new Error("Token is required", { cause: 401 });
   }
+  const user = decodeToken(types.refresh, token);
   const accessToken = jwt.sign(
     {
       _id: user._id,

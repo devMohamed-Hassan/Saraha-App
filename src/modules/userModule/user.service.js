@@ -4,14 +4,7 @@ import { findById } from "../../services/db.service.js";
 import { handleSuccess } from "../../utils/responseHandler.js";
 
 export const getUserProfile = async (req, res, next) => {
-  const token = req.headers.token;
-  if (!token) {
-    throw new Error("Token is required", { cause: 401 });
-  }
-
-  const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  const user = await findById(userModel, payload._id);
-
+  const user = req.user;
   handleSuccess({
     res,
     statusCode: 200,
