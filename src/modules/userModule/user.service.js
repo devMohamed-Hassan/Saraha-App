@@ -9,7 +9,7 @@ export const getUserProfile = async (req, res, next) => {
     throw new Error("Token is required", { cause: 401 });
   }
 
-  const payload = jwt.verify(token, process.env.JWT_SIGNATURE);
+  const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
   const user = await findById(userModel, payload._id);
 
   handleSuccess({

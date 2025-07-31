@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import userModel from "../../config/models/user.model.js";
 import { handleSuccess } from "../../utils/responseHandler.js";
 import jwt from "jsonwebtoken";
-import { create, findOne } from "../../services/db.service.js";
+import { create, findById, findOne } from "../../services/db.service.js";
 
 const INVALID_CREDENTIALS_MSG = "Invalid email or password";
 const SALT_ROUNDS = 10;
@@ -86,7 +86,12 @@ export const login = async (req, res, next) => {
     email: user.email,
   };
 
-  const token = jwt.sign(payload, process.env.JWT_SIGNATURE);
+  const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: `20000ms`,
+  });
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: `7d`,
+  });
 
   handleSuccess({
     res,
@@ -97,8 +102,35 @@ export const login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token,
+        accessToken,
+        refreshToken,
       },
+    },
+  });
+};
+
+export const refreshToken = async (req, res, next) => {
+  const { authorization } = req.headers;
+  const payload = jwt.verify(authorization, process.env.REFRESH_TOKEN_SECRET);
+  const user = await findById(userModel, payload._id);
+  if (!user) {
+    return next(new Error("User Not Found", { cause: 401 }));
+  }
+  const accessToken = jwt.sign(
+    {
+      _id: user._id,
+      email: user.email,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: `20S`,
+    }
+  );
+  handleSuccess({
+    res,
+    statusCode: 202,
+    data: {
+      accessToken,
     },
   });
 };
